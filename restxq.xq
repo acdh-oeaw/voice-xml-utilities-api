@@ -38,7 +38,6 @@ declare
   %rest:GET
   %rest:produces("application/json")
   %output:method("json")
-  
 function voice:get-tree-as-json() {
 	voice:get-tree-as-xml()
 };
