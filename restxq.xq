@@ -5,12 +5,12 @@ declare namespace tei = 'http://www.tei-c.org/ns/1.0';
 declare
   %rest:path("VOICE_CLARIAH/corpusTree")
   %rest:GET
+  %rest:produces("application/json")
   %rest:produces("application/xml")
   %rest:produces("text/html")
-  %output:method("xml")
-  
-function voice:get-tree-as-xml() {
-    <json type="object">
+  %rest:query-param("method", "{$method}", "json")
+function voice:get-tree-as-xml($method as xs:string) {
+    let $ret := <json type="object">
 		<label>VOICE</label>
 		<domains type="array">{
 			for $t in collection('VOICEmerged')//tei:TEI
@@ -31,33 +31,30 @@ function voice:get-tree-as-xml() {
         	</_>
 	    }</domains>
    </json>
-};
-
-declare
-  %rest:path("VOICE_CLARIAH/corpusTree")
-  %rest:GET
-  %rest:produces("application/json")
-  %output:method("json")
-function voice:get-tree-as-json() {
-	voice:get-tree-as-xml()
+   return (<rest:response> 
+    <output:serialization-parameters>
+      <output:method value='{$method}'/>
+    </output:serialization-parameters>
+   </rest:response>,
+   $ret)
 };
 
 declare
   %rest:path("VOICE_CLARIAH/corpus")
   %rest:GET
   %rest:produces("application/xml")
-  %output:method("xml")
-function voice:getHeader-as-xml() {
-    doc('VOICEheader/_corpus-header.xml_')
-};
-
-declare
-  %rest:path("VOICE_CLARIAH/corpus")
-  %rest:GET
   %rest:produces("application/json")
-  %output:method("json")
-function voice:getHeader-as-json() {
-    json:serialize(doc('VOICEheader/_corpus-header.xml_'))
+  %rest:query-param("method", "{$method}", "json")
+function voice:getHeader-as-xml($method as xs:string) {
+    let $ret := switch($method)
+      case 'json' return json:serialize(doc('VOICEheader/_corpus-header.xml_'))
+      default return doc('VOICEheader/_corpus-header.xml_')   
+   return (<rest:response> 
+    <output:serialization-parameters>
+      <output:method value='{$method}'/>
+    </output:serialization-parameters>
+   </rest:response>,
+   $ret)
 };
 
 declare
