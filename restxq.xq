@@ -14,7 +14,7 @@ declare
   %rest:produces("application/xml")
   %rest:produces("text/html")
   %rest:query-param("method", "{$method}", "json")
-function voice:get-tree-as-xml($method as xs:string) {
+function voice:get-tree-as-xml($method as xs:string?) {
     let $ret := <json type="object">
 		<label>VOICE</label>
 		<domains type="array">{
@@ -51,7 +51,7 @@ declare
   %rest:produces("application/xml")
   %rest:produces("application/json")
   %rest:query-param("method", "{$method}", "json")
-function voice:getHeader($method as xs:string) {
+function voice:getHeader($method as xs:string?) {
     let $ret := switch($method)
       case 'json' return json:serialize($voice:corpusHeader)
       default return $voice:corpusHeader   
