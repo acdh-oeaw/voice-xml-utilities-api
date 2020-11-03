@@ -3,7 +3,7 @@ module namespace voice = 'http://www.univie.ac.at/voice/ns/1.0';
 declare namespace tei = 'http://www.tei-c.org/ns/1.0';
 
 declare variable $voice:collection := 'VOICEmerged';
-declare variable $voice:corpusheader as document-node() := doc('VOICEheader/_corpus-header.xml_');
+declare variable $voice:corpusHeader as document-node() := doc('VOICEheader/_corpus-header.xml_');
 
 declare
   %rest:path("VOICE_CLARIAH/corpusTree")
