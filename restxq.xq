@@ -8,7 +8,7 @@ declare variable $voice:collection := 'VOICEmerged';
 declare variable $voice:corpusHeader as document-node() := doc('VOICEheader/_corpus-header.xml_');
 
 declare
-  %rest:path("VOICE_CLARIAH/corpusTree")
+  %rest:path("/VOICE_CLARIAH/corpusTree")
   %rest:GET
   %rest:produces("application/json")
   %rest:produces("application/xml")
@@ -46,7 +46,7 @@ function voice:get-tree-as-xml($method as xs:string) {
 };
 
 declare
-  %rest:path("VOICE_CLARIAH/corpus")
+  %rest:path("/VOICE_CLARIAH/corpus")
   %rest:GET
   %rest:produces("application/xml")
   %rest:produces("application/json")
@@ -64,7 +64,7 @@ function voice:getHeader($method as xs:string) {
 };
 
 declare
-  %rest:path("VOICE_CLARIAH/speechEvent/{$id}")
+  %rest:path("/VOICE_CLARIAH/speechEvent/{$id}")
   %rest:GET
   %output:method("xml")
 function voice:get-doc($id) {
@@ -72,7 +72,7 @@ function voice:get-doc($id) {
 };
 
 declare
-  %rest:path("VOICE_CLARIAH/speechEvent/{$id}/header")
+  %rest:path("/VOICE_CLARIAH/speechEvent/{$id}/header")
   %rest:GET
   %output:method("xml")
 function voice:get-header($id) {
@@ -80,7 +80,7 @@ function voice:get-header($id) {
 };
 
 declare
-    %rest:path('VOICE_CLARIAH/openapi.json')
+    %rest:path('/VOICE_CLARIAH/openapi.json')
     %rest:produces('application/json')
     %output:media-type('application/json')
 function voice:getOpenapiJSON() as item()+ {
