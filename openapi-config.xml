@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config xmlns="https://lab.sub.uni-goettingen.de/restxqopenapi">
+  <info>
+  <termsOfService>https://example.com/terms-of-use</termsOfService>
+  <contact>
+      <email>info@example.com</email>
+  </contact>
+  </info>
+  <servers>
+    <server url="http://localhost:8984/">Local development server</server>
+    <server url="https://basex.acdh-dev.oeaw.ac.at/">development server</server>
+  </servers>
+  <!--tags>
+    <tag name="category1" method="exclusive">
+        You can sort your functions into categories using these tags here.
+        <function name="yourproj:func1"/>
+        <function name="yourproj:func2"/>
+    </tag>
+    <tag name="category" method="exclusive">
+        Another category
+        <function name="yourproj:func3"/>
+    </tag>
+  </tags-->
+  <!-- if you have any authentication: httpBasic info generation is implemented at the moment: >
+  <components>
+    <securitySchemes>
+      <securityScheme name="httpBasic">
+        This service uses HTTP Basic authentication.
+        <type>http</type>
+        <scheme>basic</scheme>
+      </securityScheme>
+    </securitySchemes>
+  </components>
+  <security>
+    <SecurityRequirement name="httpBasic"/>
+  </security> <!- -->
+</config>

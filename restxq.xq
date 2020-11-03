@@ -1,5 +1,7 @@
 module namespace voice = 'http://www.univie.ac.at/voice/ns/1.0';
 
+import module namespace openapi="https://lab.sub.uni-goettingen.de/restxqopenapi" at "../openapi4restxq/content/openapi.xqm";
+
 declare namespace tei = 'http://www.tei-c.org/ns/1.0';
 
 declare variable $voice:collection := 'VOICEmerged';
@@ -75,4 +77,12 @@ declare
   %output:method("xml")
 function voice:get-header($id) {
     doc($voice:collection||"/"||$id||".xml")//tei:teiHeader
+};
+
+declare
+    %rest:path('VOICE_CLARIAH/openapi.json')
+    %rest:produces('application/json')
+    %output:media-type('application/json')
+function voice:getOpenapiJSON() as item()+ {
+  openapi:json(file:base-dir())
 };
