@@ -18,18 +18,55 @@ function voice:get-tree-as-xml($method as xs:string) {
 		<domains type="array">{
 			for $t in collection($voice:collection)//tei:TEI
 	        let $id := $t/@xml:id
-       		group by $dom := substring($id, 1, 2)
+	        let $dom := substring($id, 1, 2)
+       		group by $dom 
         	return 
         	<_ type="object">
 		    	<label>{$dom}</label>
 				<speechEvents type="array">{
 	    	        for $i in $id
-		            let $title := root($i)//tei:titleStmt/tei:title
-		            order by $i
+		            let $header := root($i)//tei:teiHeader 
+		            let $title := $header//tei:titleStmt/tei:title
+		           
+		            let $speakers_no := $header//tei:personGrp[@role = 'speakers']/xs:integer(@size)
+		            let $speakers_bucket := 
+		                  switch (true())
+		                      case $speakers_no le 3 return "2–3"
+		                      case $speakers_no ge 4 and $speakers_no le 6 return "4–6"
+		                      case $speakers_no ge 7 and $speakers_no le 10 return "7–10"
+		                      case $speakers_no ge 11 and $speakers_no le 14 return "11–14"
+		                      default return "15 and more"
+		                      
+		            let $interactants_no := $header//tei:personGrp[@role = 'interactants']/xs:integer(@size)
+		            
+		            let $interactants_bucket :=
+		                  switch (true())
+		                      case $interactants_no le 3 return "2–3"
+		                      case $interactants_no ge 4 and $interactants_no le 6 return "4–6"
+		                      case $interactants_no ge 7 and $interactants_no le 10 return "7–10"
+		                      case $interactants_no ge 11 and $interactants_no le 14 return "11–14"
+		                      default return "15 and more"
+		            
+		            (: CHANGEME: This should be inside of extent :)
+		            let $no_of_words := $header//tei:note[starts-with(.,'Words')]/xs:integer(normalize-space(substring-after(.,'Words:')))
+		            let $dur := $header//tei:recording/xs:duration(@dur),
+		                $dur_in_seconds := seconds-from-duration($dur)+minutes-from-duration($dur)*60+hours-from-duration($dur)*1200
+		            let $order := replace($i, '\p{L}','')
+		            let $speech_event_type := substring-before(substring-after($i, $dom),$order)
+		            
+		            
+		            order by $speech_event_type, xs:integer($order) ascending
+		            (:where $interactants_no ne 0:)
 	    	        return
 						<_ type="object">
 							<id>{data($i)}</id>
-							<title>{data($title)}</title>
+							<title>{normalize-space($title)}</title>
+							<words type="number">{$no_of_words}</words>
+							<duration type="number">{$dur_in_seconds}</duration>
+							<speakers type="number">{$speakers_no}</speakers>
+							<speakersBucket>{$speakers_bucket}</speakersBucket>
+							<interactants type="number">{$interactants_no}</interactants>
+							<interactantsBucket>{$interactants_bucket}</interactantsBucket>
 						</_>
 				}</speechEvents>
         	</_>
