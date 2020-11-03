@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<package xmlns="http://expath.org/ns/pkg"
+  name="https://gitlab.com/acdh-oeaw/voice/voice-clariah-api"
+  abbrev="voice-clariah-api"
+  version="0.1.0"
+  spec="1.0"
+  xml:id="voiceClariahApi">
+  <title>VOICE CLARIAH API</title>
+  <dependency processor="http://basex.org" semver-min="9.2"/>
+  <xquery>
+    <namespace>https://gitlab.com/acdh-oeaw/voice/voice-clariah-api</namespace>
+    <file>restxq.xq</file>
+  </xquery>
+</package>

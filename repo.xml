@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<meta xmlns="http://exist-db.org/xquery/repo">
+    <description>API for the VOICE-CLARIAH project</description>
+    <author>Daniel Schopper, Omar Siam</author>
+    <website>https://gitlab.com/acdh-oeaw/voice/voice-clariah-api</website>
+    <status>development</status>
+    <license ref="https://spdx.org/licenses/">MIT</license>
+    <copyright>true</copyright>
+    <type>application</type>
+    <target>vioce-clariah-api</target>
+    <changelog>
+      <change version="0.1.0">
+        <ul xmlns="http://www.w3.org/1999/xhtml">
+          <li class="feat">Features
+            <ul style="margin-left: 15px;">
+              <li>Gather ideas</li>
+            </ul>
+          </li>
+        </ul>
+      </change>
+    </changelog>
+</meta>
