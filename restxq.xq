@@ -6,9 +6,18 @@ declare namespace tei = 'http://www.tei-c.org/ns/1.0';
 declare namespace cq = "http://www.univie.ac.at/voice/corpusquery";
 
 declare variable $voice:collection := 'VOICEmerged';
+declare variable $voice:apiBasePath := "/VOICE_CLARIAH";
 declare variable $voice:corpusHeader as document-node() := doc('VOICEheader/_corpus-header.xml_');
 declare variable $voice:audioDesc as document-node() := fn:parse-xml(file:read-text(file:base-dir()||'/aux/voiceAudioDesc.xml'));
 declare variable $voice:audioBasePath := "https://voice.acdh.oeaw.ac.at/sound"; 
+
+declare %private function voice:path($textid as xs:string, $view as xs:string){
+    let $b := $voice:apiBasePath||"/speechEvent/"||$textid
+    return switch ($view)
+        case "tei"      return $b
+        case "audio"    return if ($voice:audioDesc//cq:SoundFile[@corresponds=concat('#', $textid)]) then $voice:audioBasePath||"/"||$textid||".mp3" else ()
+        default return $b||"/"||$view
+};
 
 declare
   %rest:path("/VOICE_CLARIAH/corpusTree")
@@ -59,9 +68,9 @@ function voice:get-tree-as-xml($method as xs:string?) {
 		            let $order := replace($i, '\p{L}','')
 		            let $speech_event_type := substring-before(substring-after($i, $dom),$order)
 		            
+		            let $audioLocation := voice:path($i, "audio")
 		            
-		            let $sfs := $voice:audioDesc//cq:SoundFile[@corresponds=concat('#', $i)][1]
-		            let $audioLocation := if ($sfs) then $voice:audioBasePath||"/"||$i||".mp3" else ()
+		            
 		            (: CHECKME probably there are no tracks at all :)
 		            (:let $tracks := 
                         for $sf in $sfs
@@ -79,8 +88,13 @@ function voice:get-tree-as-xml($method as xs:string?) {
 							<title>{normalize-space($title)}</title>
 							<domain>{$dom}</domain>
 							<spet>{$speech_event_type}</spet>
-							<audioAvailable type="boolean">{exists($sfs)}</audioAvailable>
-							<audioLocation type="{if (exists($sfs)) then 'string' else 'null'}">{$audioLocation}</audioLocation> <!--type="array">{
+							<refs type="object">
+							     <audio type="{if ($audioLocation != '') then 'string' else 'null'}">{$audioLocation}</audio>
+							     <TEI>{voice:path($i, "tei")}</TEI>
+							     <teiHeader>{voice:path($i, "header")}</teiHeader>
+							</refs>
+							<audioAvailable type="boolean">{$audioLocation != ''}</audioAvailable>
+							<!--type="array">{
 							     for $t in $tracks
 							     return 
 							         <_ type="object">
