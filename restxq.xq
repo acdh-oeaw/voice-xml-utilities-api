@@ -3,9 +3,12 @@ module namespace voice = 'http://www.univie.ac.at/voice/ns/1.0';
 import module namespace openapi="https://lab.sub.uni-goettingen.de/restxqopenapi" at "../openapi4restxq/content/openapi.xqm";
 
 declare namespace tei = 'http://www.tei-c.org/ns/1.0';
+declare namespace cq = "http://www.univie.ac.at/voice/corpusquery";
 
 declare variable $voice:collection := 'VOICEmerged';
 declare variable $voice:corpusHeader as document-node() := doc('VOICEheader/_corpus-header.xml_');
+declare variable $voice:audioDesc as document-node() := fn:parse-xml(file:read-text(file:base-dir()||'/aux/voiceAudioDesc.xml'));
+declare variable $voice:audioBasePath := "https://voice.acdh.oeaw.ac.at/sound"; 
 
 declare
   %rest:path("/VOICE_CLARIAH/corpusTree")
@@ -57,12 +60,34 @@ function voice:get-tree-as-xml($method as xs:string?) {
 		            let $speech_event_type := substring-before(substring-after($i, $dom),$order)
 		            
 		            
+		            let $sfs := $voice:audioDesc//cq:SoundFile[@corresponds=concat('#', $i)][1]
+		            let $audioLocation := if ($sfs) then $voice:audioBasePath||"/"||$i||".mp3" else ()
+		            (: CHECKME probably there are no tracks at all :)
+		            (:let $tracks := 
+                        for $sf in $sfs
+                        let $filename := 
+                            if(count($sfs) > 1) 
+                            then concat($i, "_", $sf/@num, ".mp3") 
+                            else concat($i, ".mp3")
+                        return map {"num" : xs:integer($sf/@num), "path" : $voice:audioBasePath||"/"||$filename}:)
+                        
 		            order by $speech_event_type, xs:integer($order) ascending
 		            (:where $interactants_no ne 0:)
 	    	        return
 						<_ type="object">
 							<id>{data($i)}</id>
 							<title>{normalize-space($title)}</title>
+							<domain>{$dom}</domain>
+							<spet>{$speech_event_type}</spet>
+							<audioAvailable type="boolean">{exists($sfs)}</audioAvailable>
+							<audioLocation type="{if (exists($sfs)) then 'string' else 'null'}">{$audioLocation}</audioLocation> <!--type="array">{
+							     for $t in $tracks
+							     return 
+							         <_ type="object">
+							             <num type="number">{$t('num')}</num>
+							             <location>{$t('path')}</location>
+							         </_>
+							}</tracks>-->
 							<words type="number">{$no_of_words}</words>
 							<duration type="number">{$dur_in_seconds}</duration>
 							<speakers type="number">{$speakers_no}</speakers>
