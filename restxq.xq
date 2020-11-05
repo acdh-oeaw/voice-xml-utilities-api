@@ -20,7 +20,7 @@ declare %private function voice:path($textid as xs:string, $view as xs:string){
 };
 
 declare
-  %rest:path("/VOICE_CLARIAH/corpusTree")
+  %rest:path("/VOICE_CLARIAH/corpus/tree")
   %rest:GET
   %rest:produces("application/json")
   %rest:produces("application/xml")
@@ -122,7 +122,7 @@ function voice:get-tree-as-xml($method as xs:string?) {
 };
 
 declare
-  %rest:path("/VOICE_CLARIAH/corpus")
+  %rest:path("/VOICE_CLARIAH/corpus/header")
   %rest:GET
   %rest:produces("application/xml")
   %rest:produces("application/json")
