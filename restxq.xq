@@ -8,7 +8,7 @@ declare namespace cq = "http://www.univie.ac.at/voice/corpusquery";
 declare variable $voice:collection := 'VOICEmerged';
 declare variable $voice:apiBasePath := "/VOICE_CLARIAH";
 declare variable $voice:corpusHeader as document-node() := doc('VOICEheader/_corpus-header.xml_');
-declare variable $voice:audioDesc as document-node() := fn:parse-xml(file:read-text(file:base-dir()||'/aux/voiceAudioDesc.xml'));
+declare variable $voice:audioDesc as document-node() := fn:parse-xml(file:read-text(file:base-dir()||'/audio/voiceAudioDesc.xml'));
 declare variable $voice:audioBasePath := "https://voice.acdh.oeaw.ac.at/sound"; 
 
 declare %private function voice:path($textid as xs:string, $view as xs:string){
