@@ -145,7 +145,7 @@ declare
   %rest:query-param("method", "{$method}", "html")
 function voice:get-doc($id, $method as xs:string?) {
   let $ret := switch ($method)
-  case "html" return parse-xml-fragment(xslt:transform-text(doc($voice:collection||"/"||$id||".xml"), doc(static-base-uri()||"/../styles/voice.xsl")))
+  case "html" return parse-xml-fragment(xslt:transform-text(doc($voice:collection||"/"||$id||".xml"), doc(file:parent(static-base-uri())||"/styles/voice.xsl")))
   default return doc($voice:collection||"/"||$id||".xml")
    return (<rest:response> 
     <output:serialization-parameters>
