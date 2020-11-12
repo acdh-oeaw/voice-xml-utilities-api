@@ -1,12 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xsl:stylesheet xmlns="http://www.w3.org/1999/xhtml" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:voice="http://www.univie.ac.at/voice/ns/1.0" xmlns:exist="http://exist.sourceforge.net/NS/exist" xmlns:tei="http://www.tei-c.org/ns/1.0" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:cq="http://www.univie.ac.at/voice/corpusquery" version="2.0">
+<xsl:stylesheet xmlns="http://www.w3.org/1999/xhtml" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:voice="http://www.univie.ac.at/voice/ns/1.0" xmlns:exist="http://exist.sourceforge.net/NS/exist" xmlns:tei="http://www.tei-c.org/ns/1.0" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:cq="http://www.univie.ac.at/voice/corpusquery" version="2.0" exclude-result-prefixes="#all">
 
 <!-- <xsl:import href="common.xsl"/> -->
 <!-- <xsl:import href="header.xsl"/> -->
-
-
-
-<xsl:preserve-space elements="tei:u tei:emph"/>
+  
+<!--<xsl:preserve-space elements="tei:u tei:emph"/>-->
 
 <xsl:param name="uelem">div</xsl:param>
 <xsl:param name="upartelem">span</xsl:param>
@@ -1282,12 +1280,14 @@
 
 
 
-<xsl:template match="tei:text">
+<xsl:template match="tei:text"><xsl:text xml:space="preserve">
+</xsl:text>
 <!--  <div class="switches"> -->
 <!--    Hide/Show: -->
 <!--  </div> -->
   <div class="text">
-    <xsl:apply-templates/>
+    <xsl:apply-templates/><xsl:text xml:space="preserve">
+</xsl:text>
   </div>
 </xsl:template>
 
@@ -1296,7 +1296,8 @@
 <!--   <div class="u replace" id="{@xml:id}">.</div> -->
 <!-- </xsl:template> -->
 
-<xsl:template match="tei:u">
+<xsl:template match="tei:u"><xsl:text xml:space="preserve">
+</xsl:text>
 <!--  <xsl:message>TEI:U</xsl:message> -->
   <xsl:variable name="uid" select="@xml:id"/>
   <xsl:variable name="line_no">
@@ -1646,7 +1647,8 @@
 <xsl:template name="textNodeCallback">
   <xsl:param name="node" select="."/>
   <xsl:choose>
-            <xsl:when test="ancestor::tei:unclear">
+    <xsl:when test="parent::tei:unclear"/>
+    <xsl:when test="ancestor::tei:unclear">
 	  <xsl:choose>
                     <xsl:when test="(ancestor::tei:unclear[1]//text())[1] is . and (ancestor::tei:unclear[1]//text())[last()] is .">
 		  <xsl:value-of select="replace(replace(., '^ +', ''), ' +$', '')"/>
@@ -1664,9 +1666,13 @@
 		</xsl:otherwise>
 	  </xsl:choose>
 	</xsl:when>
+  <xsl:when test="parent::tei:emph"/>
 	<xsl:when test="ancestor::tei:emph">
 	  <xsl:value-of select="upper-case(string(.))"/>
 	</xsl:when>
+    <xsl:when test="parent::tei:seg[@type = ('overlap')]"/>
+    <xsl:when test="parent::tei:seg"><xsl:value-of select="."/></xsl:when>
+    <xsl:when test="normalize-space(.) = ''"/>
 	<xsl:otherwise>
                 <xsl:value-of select="."/>
 	</xsl:otherwise>

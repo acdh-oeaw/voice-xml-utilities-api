@@ -142,9 +142,17 @@ function voice:getHeader($method as xs:string?) {
 declare
   %rest:path("/VOICE_CLARIAH/speechEvent/{$id}")
   %rest:GET
-  %output:method("xml")
-function voice:get-doc($id) {
-    doc($voice:collection||"/"||$id||".xml")
+  %rest:query-param("method", "{$method}", "html")
+function voice:get-doc($id, $method as xs:string?) {
+  let $ret := switch ($method)
+  case "html" return parse-xml-fragment(xslt:transform-text(doc($voice:collection||"/"||$id||".xml"), doc(static-base-uri()||"/../styles/voice.xsl")))
+  default return doc($voice:collection||"/"||$id||".xml")
+   return (<rest:response> 
+    <output:serialization-parameters>
+      <output:method value='{$method}'/>
+    </output:serialization-parameters>
+   </rest:response>,
+   $ret)
 };
 
 declare
