@@ -149,7 +149,11 @@ declare
   %rest:query-param("method", "{$method}", "html")
 function voice:get-doc($id, $method as xs:string?) {
   let $ret := switch ($method)
-  case "html" return parse-xml-fragment(xslt:transform-text(doc($voice:collection||"/"||$id||".xml"), doc(file:parent(static-base-uri())||"/styles/voice.xsl")))
+  case "html" return (
+    <link rel="stylesheet" type="text/css" href="voice_online.css"/>,
+    <link rel="stylesheet" type="text/css" href="view_transcript.css"/>,
+    parse-xml-fragment(xslt:transform-text(doc($voice:collection||"/"||$id||".xml"), doc(file:parent(static-base-uri())||"/styles/voice.xsl")))
+  )
   default return doc($voice:collection||"/"||$id||".xml")
    return (<rest:response> 
     <output:serialization-parameters>
@@ -157,6 +161,20 @@ function voice:get-doc($id, $method as xs:string?) {
     </output:serialization-parameters>
    </rest:response>,
    $ret)
+};
+
+declare
+  %rest:path("/VOICE_CLARIAH/speechEvent/voice_online.css")
+  %rest:GET
+function voice:get-voice-online-css() {
+  voice:return-content(file:read-binary(file:parent(static-base-uri())||'/voice_online.css'), web:content-type(file:parent(static-base-uri())||'/voice_online.css'))
+};
+
+declare
+  %rest:path("/VOICE_CLARIAH/speechEvent/view_transcript.css")
+  %rest:GET
+function voice:get-view-transcript-css() {
+  voice:return-content(file:read-binary(file:parent(static-base-uri())||'/view_transcript.css'), web:content-type(file:parent(static-base-uri())||'/view_transcript.css'))
 };
 
 declare
@@ -173,7 +191,7 @@ declare
   %rest:query-param("q", "{$q}")
   %rest:query-param("from", "{$from}", "1")
   %rest:query-param("pagesize", "{$pagesize}", "20")
-  %rest:query-param("method", "{$method}", "basex")
+  %rest:query-param("method", "{$method}", "html")
 function voice:search($q as xs:string?, $from as xs:integer, $pagesize as xs:integer, $method as xs:string?) {
   let $log := voice:l($q),
       $response := http:send-request(
@@ -191,7 +209,11 @@ function voice:search($q as xs:string?, $from as xs:integer, $pagesize as xs:int
         let $highlightIDs := $foundTags($i)/@xml:id
         return $u update for $n in .//*[@xml:id = $highlightIDs] return replace node $n with <exist:match>{$n}</exist:match>}</_>,
       $ret := switch ($method)
-        case "html" return parse-xml-fragment(xslt:transform-text($highlightedUtterances, doc(file:parent(static-base-uri())||"/styles/voice.xsl")))
+        case "html" return (
+          <link rel="stylesheet" type="text/css" href="voice_online.css"/>,
+          <link rel="stylesheet" type="text/css" href="view_transcript.css"/>,
+          parse-xml-fragment(xslt:transform-text($highlightedUtterances, doc(file:parent(static-base-uri())||"/styles/voice.xsl")))
+        )
         case "basex" return $foundTags
         default return $highlightedUtterances
   return (<rest:response> 
@@ -215,4 +237,31 @@ function voice:getOpenapiJSON() as item()+ {
 
 declare %private function voice:l($message as xs:string) as empty-sequence() {
   if ($voice:log) then admin:write-log($message, 'INFO') else ()
+};
+
+declare %private function voice:return-content($bin, $media-type as xs:string) {
+  let $hash := xs:string(xs:hexBinary(hash:md5($bin)))
+       , $hashBrowser := request:header('If-None-Match', '')
+    return if ($hash = $hashBrowser) then
+      voice:workaround_902(web:response-header(map{}, map{}, map{'status': 304, 'message': 'Not Modified'}))
+    else (
+      voice:workaround_902(web:response-header(map { 'media-type': $media-type,
+                                'method': 'basex',
+                                'binary': 'yes' }, 
+                          map { 'X-UA-Compatible': 'IE=11'
+                              , 'Cache-Control': 'max-age=3600,public'
+                              , 'ETag': $hash })),
+      $bin
+    )
+};
+
+declare %private function voice:workaround_902($in as element(rest:response)) as element(rest:response) {
+  if (db:system()//version = ('9.0.2'))
+  then copy $out := $in
+  modify (delete node $out/@message,
+              delete node $out/@status,
+              insert node $in/@message as first into $out/*:response,
+              insert node $in/@status as first into $out/*:response )
+  return parse-xml-fragment(serialize(<_ xmlns:rest="http://exquery.org/ns/restxq" xmlns:http="http://expath.org/ns/http-client" xmlns:output="http://www.w3.org/2010/xslt-xquery-serialization">{$out}</_>, map {'indent': 'no'}))/*/*
+  else $in
 };
