@@ -202,11 +202,11 @@ function voice:search($q as xs:string?, $from as xs:integer, $pagesize as xs:int
       $foundTags := map:merge((for $id at $i in $resultIDs
         let $foundTags := collection($voice:collection)//*[@xml:id = tokenize($id, ' ')]
         group by $uID := $foundTags/ancestor::*:u/@xml:id/data()
-        return map{$i[1]: $foundTags})),
-      $foundUtteranceIDs := distinct-values($foundTags?*!ancestor::*:u/@xml:id),
-      $utterances := <_>{collection($voice:collection)//*[@xml:id = subsequence($foundUtteranceIDs, $from, $pagesize)]}</_>,
-      $highlightedUtterances := <_>{for $u at $i in $utterances/*
-        let $highlightIDs := $foundTags($i)/@xml:id
+        return map{if (empty($uID)) then 'catch empty utterance ID' else $uID: $foundTags})), (: TODO where does this come from? search "be not":)
+      $foundUtteranceIDs := subsequence(distinct-values($foundTags?*!ancestor::*:u/@xml:id), $from, $pagesize),
+      $utterances := <_>{collection($voice:collection)//*[@xml:id = $foundUtteranceIDs]}</_>,
+      $highlightedUtterances := <_>{for $u in $utterances/*
+        let $highlightIDs := $foundTags($u/@xml:id)/@xml:id
         return $u update for $n in .//*[@xml:id = $highlightIDs] return replace node $n with <exist:match>{$n}</exist:match>}</_>,
       $ret := switch ($method)
         case "html" return (
@@ -224,7 +224,9 @@ function voice:search($q as xs:string?, $from as xs:integer, $pagesize as xs:int
       <output:method value='{$method}'/>
     </output:serialization-parameters>
    </rest:response>,
-   $ret)
+   $ret
+   (: , if ($foundTags('xxx')) then (<error/>, $foundTags('xxx')) else () :)
+   )
 };
 
 declare
