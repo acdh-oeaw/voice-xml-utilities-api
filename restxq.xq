@@ -171,23 +171,28 @@ declare
   %rest:path("/VOICE_CLARIAH/speechEvent/search")
   %rest:GET
   %rest:query-param("q", "{$q}")
+  %rest:query-param("from", "{$from}", "1")
+  %rest:query-param("pagesize", "{$pagesize}", "20")
   %rest:query-param("method", "{$method}", "basex")
-function voice:search($q as xs:string?, $method as xs:string?) {
+function voice:search($q as xs:string?, $from as xs:integer, $pagesize as xs:integer, $method as xs:string?) {
   let $log := voice:l($q),
       $response := http:send-request(
     <http:request method="GET"
-     href='{$voice:noskeRunCgi}/first?corpname=voice&amp;queryselector=iqueryrow&amp;iquery={translate($q, ' ', '+')}&amp;attrs=wid&amp;kwicleftctx=0&amp;kwicrightctx=0'/>
+     href='{$voice:noskeRunCgi}/first?corpname=voice&amp;queryselector=iqueryrow&amp;iquery={translate($q, ' ', '+')}&amp;attrs=wid&amp;kwicleftctx=0&amp;kwicrightctx=0&amp;pagesize=100000'/>
   ),
       $resultIDs := $response[2]//Lines/_/Kwic/_/str,
       $foundTags := map:merge((for $id at $i in $resultIDs
         let $foundTags := collection($voice:collection)//*[@xml:id = tokenize($id, ' ')]
-        return map{$i: $foundTags})),
-      $utterances := <_>{$foundTags?*!./ancestor::*:u}</_>,
+        group by $uID := $foundTags/ancestor::*:u/@xml:id/data()
+        return map{$i[1]: $foundTags})),
+      $foundUtteranceIDs := distinct-values($foundTags?*!ancestor::*:u/@xml:id),
+      $utterances := <_>{collection($voice:collection)//*[@xml:id = subsequence($foundUtteranceIDs, $from, $pagesize)]}</_>,
       $highlightedUtterances := <_>{for $u at $i in $utterances/*
         let $highlightIDs := $foundTags($i)/@xml:id
         return $u update for $n in .//*[@xml:id = $highlightIDs] return replace node $n with <exist:match>{$n}</exist:match>}</_>,
       $ret := switch ($method)
         case "html" return parse-xml-fragment(xslt:transform-text($highlightedUtterances, doc(file:parent(static-base-uri())||"/styles/voice.xsl")))
+        case "basex" return $foundTags
         default return $highlightedUtterances
   return (<rest:response> 
     <output:serialization-parameters>
