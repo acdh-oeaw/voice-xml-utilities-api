@@ -1,15 +1,19 @@
 module namespace voice = 'http://www.univie.ac.at/voice/ns/1.0';
 
+import module namespace admin = "http://basex.org/modules/admin"; (: for logging :)
 import module namespace openapi="https://lab.sub.uni-goettingen.de/restxqopenapi" at "../openapi4restxq/content/openapi.xqm";
 
+declare namespace exist = "http://exist.sourceforge.net/NS/exist"; (: for compatibility with xsl :)
 declare namespace tei = 'http://www.tei-c.org/ns/1.0';
 declare namespace cq = "http://www.univie.ac.at/voice/corpusquery";
 
+declare variable $voice:log := true();
 declare variable $voice:collection := 'VOICEmerged';
 declare variable $voice:apiBasePath := "/VOICE_CLARIAH";
 declare variable $voice:corpusHeader as document-node() := doc('VOICEheader/_corpus-header.xml_');
 declare variable $voice:audioDesc as document-node() := fn:parse-xml(file:read-text(file:base-dir()||'/audio/voiceAudioDesc.xml'));
-declare variable $voice:audioBasePath := "https://voice.acdh.oeaw.ac.at/sound"; 
+declare variable $voice:audioBasePath := "https://voice.acdh.oeaw.ac.at/sound";
+declare variable $voice:noskeRunCgi := "https://voice-noske.acdh-dev.oeaw.ac.at/bonito/run.cgi";
 
 declare %private function voice:path($textid as xs:string, $view as xs:string){
     let $b := $voice:apiBasePath||"/speechEvent/"||$textid
@@ -164,9 +168,46 @@ function voice:get-header($id) {
 };
 
 declare
+  %rest:path("/VOICE_CLARIAH/speechEvent/search")
+  %rest:GET
+  %rest:query-param("q", "{$q}")
+  %rest:query-param("method", "{$method}", "basex")
+function voice:search($q as xs:string?, $method as xs:string?) {
+  let $log := voice:l($q),
+      $response := http:send-request(
+    <http:request method="GET"
+     href='{$voice:noskeRunCgi}/first?corpname=voice&amp;queryselector=iqueryrow&amp;iquery={translate($q, ' ', '+')}&amp;attrs=wid&amp;kwicleftctx=0&amp;kwicrightctx=0'/>
+  ),
+      $resultIDs := $response[2]//Lines/_/Kwic/_/str,
+      $foundTags := map:merge((for $id at $i in $resultIDs
+        let $foundTags := collection($voice:collection)//*[@xml:id = tokenize($id, ' ')]
+        return map{$i: $foundTags})),
+      $utterances := <_>{$foundTags?*!./ancestor::*:u}</_>,
+      $highlightedUtterances := <_>{for $u at $i in $utterances/*
+        let $highlightIDs := $foundTags($i)/@xml:id
+        return $u update for $n in .//*[@xml:id = $highlightIDs] return replace node $n with <exist:match>{$n}</exist:match>}</_>,
+      $ret := switch ($method)
+        case "html" return parse-xml-fragment(xslt:transform-text($highlightedUtterances, doc(file:parent(static-base-uri())||"/styles/voice.xsl")))
+        default return $highlightedUtterances
+  return (<rest:response> 
+    <output:serialization-parameters>
+      <output:media-type value="{if ($method = ('xhtml', 'html')) then 'text/html'
+                                 else if ($method='xml') then 'application/xml'
+                                 else if ($method='json') then 'application/json' else 'text/plain'}"/>
+      <output:method value='{$method}'/>
+    </output:serialization-parameters>
+   </rest:response>,
+   $ret)
+};
+
+declare
     %rest:path('/VOICE_CLARIAH/openapi.json')
     %rest:produces('application/json')
     %output:media-type('application/json')
 function voice:getOpenapiJSON() as item()+ {
   openapi:json(file:base-dir())
+};
+
+declare %private function voice:l($message as xs:string) as empty-sequence() {
+  if ($voice:log) then admin:write-log($message, 'INFO') else ()
 };
