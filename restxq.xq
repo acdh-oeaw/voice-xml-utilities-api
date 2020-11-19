@@ -165,16 +165,18 @@ function voice:get-doc($id, $method as xs:string?) {
 
 declare
   %rest:path("/VOICE_CLARIAH/speechEvent/voice_online.css")
+  %rest:header-param("If-None-Match", "{$if-none-match}")
   %rest:GET
-function voice:get-voice-online-css() {
-  voice:return-content(file:read-binary(file:parent(static-base-uri())||'/voice_online.css'), web:content-type(file:parent(static-base-uri())||'/voice_online.css'))
+function voice:get-voice-online-css($if-none-match as xs:string?) {
+  voice:return-content(file:read-binary(file:parent(static-base-uri())||'/voice_online.css'), web:content-type(file:parent(static-base-uri())||'/voice_online.css'), $if-none-match)
 };
 
 declare
   %rest:path("/VOICE_CLARIAH/speechEvent/view_transcript.css")
+  %rest:header-param("If-None-Match", "{$if-none-match}")
   %rest:GET
-function voice:get-view-transcript-css() {
-  voice:return-content(file:read-binary(file:parent(static-base-uri())||'/view_transcript.css'), web:content-type(file:parent(static-base-uri())||'/view_transcript.css'))
+function voice:get-view-transcript-css($if-none-match as xs:string?) {
+  voice:return-content(file:read-binary(file:parent(static-base-uri())||'/view_transcript.css'), web:content-type(file:parent(static-base-uri())||'/view_transcript.css'), $if-none-match)
 };
 
 declare
@@ -241,9 +243,11 @@ declare %private function voice:l($message as xs:string) as empty-sequence() {
   if ($voice:log) then admin:write-log($message, 'INFO') else ()
 };
 
-declare %private function voice:return-content($bin, $media-type as xs:string) {
+declare %private function voice:return-content($bin, $media-type as xs:string, $if-none-match as xs:string?) {
   let $hash := xs:string(xs:hexBinary(hash:md5($bin)))
-       , $hashBrowser := request:header('If-None-Match', '')
+      , $hashBrowser := if (empty($if-none-match)) then
+        try {request:header('If-None-Match', '')} catch * {''} (: broken in 9.0.2 :)
+        else $if-none-match
     return if ($hash = $hashBrowser) then
       voice:workaround_902(web:response-header(map{}, map{}, map{'status': 304, 'message': 'Not Modified'}))
     else (
