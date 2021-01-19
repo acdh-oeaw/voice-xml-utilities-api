@@ -14,6 +14,24 @@ declare variable $voice:corpusHeader as document-node() := doc('VOICEheader/_cor
 declare variable $voice:audioDesc as document-node() := fn:parse-xml(file:read-text(file:base-dir()||'/audio/voiceAudioDesc.xml'));
 declare variable $voice:audioBasePath := "https://voice.acdh.oeaw.ac.at/sound";
 declare variable $voice:noskeRunCgi := "https://voice-noske.acdh-dev.oeaw.ac.at/bonito/run.cgi";
+declare variable $voice:speakers := json:parse(serialize(map:merge(for $i in collection($voice:collection)//tei:listPerson//*[@sameAs]
+group by $sa := $i/@sameAs/data()
+let $c := count($i)
+order by $c descending
+return map {substring($sa, 2):
+map{"age": $i[1]/tei:age/text(),
+    "sex": $i[1]/tei:sex/text(),
+    "occupation": $i[1]/tei:occupation/text(),
+    "L1": array {$i[1]/tei:langKnowledge/*[@level="L1"]/@tag/data()},
+    "refs" : map:merge(
+      for $r in $i/@xml:id
+      return map {substring-before($r/data(), '_'): map{
+        "role": $r/../@role/data(),
+        "tag": substring-after($r/data(), '_')
+      }}
+    )}
+  }
+), map {"method": "json"}));
 
 declare %private function voice:path($textid as xs:string, $view as xs:string){
     let $b := $voice:apiBasePath||"/speechEvent/"||$textid
@@ -33,6 +51,16 @@ declare
 function voice:get-tree-as-xml($method as xs:string?) {
     let $ret := <json type="object">
 		<label>VOICE</label>
+    <title>{$voice:corpusHeader//tei:titleStmt/tei:title/text()}</title>
+    <principal>{$voice:corpusHeader//tei:titleStmt/tei:principal/text()}</principal>
+    <researchers type="array">{$voice:corpusHeader//tei:editionStmt/tei:respStmt/tei:name!<_>{./text()}</_>}</researchers>
+    <funder>{normalize-space($voice:corpusHeader//tei:titleStmt/tei:funder/text())}</funder>
+    <edition>{string-join($voice:corpusHeader//tei:editionStmt/tei:edition//text(), ' ')}</edition>
+    <extent>{$voice:corpusHeader//tei:extent/text()}</extent>
+    <publisher type="array">{tokenize($voice:corpusHeader//tei:publicationStmt/tei:publisher/text(), ', ')!<_>{.}</_>}</publisher>
+    <distributor>{$voice:corpusHeader//tei:publicationStmt/tei:distributor/text()}</distributor>
+    <source__description>{serialize($voice:corpusHeader//tei:sourceDesc/*, map {"method": "xml", "indent": "no"})}</source__description>
+    <availability>{serialize($voice:corpusHeader//tei:publicationStmt/tei:availability/*, map {"method": "xml", "indent": "no"})}</availability>
 		<domains type="array">{
 			for $t in collection($voice:collection)//tei:TEI
 	        let $id := $t/@xml:id
@@ -110,6 +138,7 @@ function voice:get-tree-as-xml($method as xs:string?) {
 							<duration type="number">{$dur_in_seconds}</duration>
 							<speakers type="number">{$speakers_no}</speakers>
 							<speakersBucket>{$speakers_bucket}</speakersBucket>
+              <speakers type="object">{$voice:speakers/*/*[refs/*/local-name() = data($i)]}</speakers>
 							<interactants type="number">{$interactants_no}</interactants>
 							<interactantsBucket>{$interactants_bucket}</interactantsBucket>
 						</_>
@@ -130,7 +159,7 @@ declare
   %rest:GET
   %rest:produces("application/xml")
   %rest:produces("application/json")
-  %rest:query-param("method", "{$method}", "json")
+  %rest:query-param("method", "{$method}", "xml")
 function voice:getHeader($method as xs:string?) {
     let $ret := switch($method)
       case 'json' return json:serialize($voice:corpusHeader)
