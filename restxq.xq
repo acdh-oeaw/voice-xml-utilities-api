@@ -34,7 +34,10 @@ map{"age": $i[1]/tei:age/text(),
 ), map {"method": "json"}));
 
 declare %private function voice:path($textid as xs:string, $view as xs:string){
-    let $b := $voice:apiBasePath||"/speechEvent/"||$textid
+    let $b :=
+        if ($textid = "teiCorpus")
+        then $voice:apiBasePath||"/corpus"
+        else $voice:apiBasePath||"/speechEvent/"||$textid
     return switch ($view)
         case "tei"      return $b
         case "audio"    return if ($voice:audioDesc//cq:SoundFile[@corresponds=concat('#', $textid)]) then $voice:audioBasePath||"/"||$textid||".mp3" else ()
@@ -61,6 +64,9 @@ function voice:get-tree-as-xml($method as xs:string?) {
     <distributor>{$voice:corpusHeader//tei:publicationStmt/tei:distributor/text()}</distributor>
     <source__description>{serialize($voice:corpusHeader//tei:sourceDesc/*, map {"method": "xml", "indent": "no"})}</source__description>
     <availability>{serialize($voice:corpusHeader//tei:publicationStmt/tei:availability/*, map {"method": "xml", "indent": "no"})}</availability>
+    <refs type="object">
+       <teiHeader>{voice:path("teiCorpus", "header")}</teiHeader>
+    </refs>
 		<domains type="array">{
 			for $t in collection($voice:collection)//tei:TEI
 	        let $id := $t/@xml:id
