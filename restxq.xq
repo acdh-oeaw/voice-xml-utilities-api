@@ -80,6 +80,41 @@ declare variable $voice:durationVocab :=
         <entry min="3600" max="7199">1h–1h59min</entry>
         <entry min="7200">2h+</entry>
     </vocab>;
+    
+declare variable $voice:speakersL1 := 
+    <vocab name="speakersL1">{
+        for $l in distinct-values(collection($voice:collection)//tei:langKnowledge/*[@level="L1"]/substring-before(@tag,'-'))[. != ""]
+        order by $l ascending
+        return <entry>{$l}</entry>
+    }</vocab>;
+    
+declare variable $voice:relationPower := 
+    <vocab name="relationPower">{
+        for $p in distinct-values(collection($voice:collection)//tei:relation[@type="power"]/data(@name))[. != ""]
+        order by $p ascending
+        return <entry>{$p}</entry>
+    }</vocab>;
+
+declare variable $voice:relationAcquaintedness := 
+    <vocab name="voice:relationAcquaintedness">{
+        for $a in distinct-values(collection($voice:collection)//tei:relation[@type="acquaintedness"]/data(@name))[. != ""]
+        order by $a ascending
+        return <entry>{$a}</entry>
+    }</vocab>;
+
+declare variable $voice:domains := 
+    <vocab name="domains">{
+        for $a in distinct-values(collection($voice:collection)//tei:TEI/substring(@xml:id,1,2))
+        order by $a ascending
+        return <entry>{$a}</entry>
+    }</vocab>;
+
+declare variable $voice:spets := 
+    <vocab name="spet">{
+        for $a in distinct-values(collection($voice:collection)//tei:TEI/replace(substring(@xml:id,3),'\d+',''))
+        order by $a ascending
+        return <entry>{$a}</entry>
+    }</vocab>;
 
 declare function voice:bucketByValue($vocab as element(vocab), $value as xs:integer) as xs:string{
     let $buckets := $vocab/entry
@@ -118,12 +153,17 @@ function voice:get-tree-as-xml($method as xs:string?) {
     <distributor>{$voice:corpusHeader//tei:publicationStmt/tei:distributor/text()}</distributor>
     <source__description>{serialize($voice:corpusHeader//tei:sourceDesc/*, map {"method": "xml", "indent": "no"})}</source__description>
     <availability>{serialize($voice:corpusHeader//tei:publicationStmt/tei:availability/*, map {"method": "xml", "indent": "no"})}</availability>
-    <vocabs type="object">{(
+    <filterEnums type="object">{(
         voice:vocab2array($voice:speakersNoVocab),
         voice:vocab2array($voice:interactantsVocab),
         voice:vocab2array($voice:noOfWordsVocab),
-        voice:vocab2array($voice:durationVocab)
-    )}</vocabs>
+        voice:vocab2array($voice:durationVocab),
+        voice:vocab2array($voice:speakersL1),
+        voice:vocab2array($voice:relationAcquaintedness),
+        voice:vocab2array($voice:relationPower),
+        voice:vocab2array($voice:domains),
+        voice:vocab2array($voice:spets)
+    )}</filterEnums>
     <refs type="object">
        <teiHeader>{voice:path("teiCorpus", "header")}</teiHeader>
     </refs>
