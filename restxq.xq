@@ -101,14 +101,34 @@ function voice:get-tree-as-xml($method as xs:string?) {
 		            
 		            (: CHANGEME: This should be inside of extent :)
 		            let $no_of_words := $header//tei:note[starts-with(.,'Words')]/xs:integer(normalize-space(substring-after(.,'Words:')))
+                let $no_of_words_bucket :=
+                      switch(true())
+                          case xs:integer($no_of_words) le 2999 return "0–2999"
+                          case xs:integer($no_of_words) ge 3000 and xs:integer($no_of_words) le 5999 return "3000–5999"
+                          case xs:integer($no_of_words) ge 6000 and xs:integer($no_of_words) le 9999 return "6000–9999"
+                          case xs:integer($no_of_words) ge 10000 and xs:integer($no_of_words) le 14999 return "10000–14999"
+                          default return "15000+"
+
+
 		            let $dur := $header//tei:recording/xs:duration(@dur),
 		                $dur_in_seconds := seconds-from-duration($dur)+minutes-from-duration($dur)*60+hours-from-duration($dur)*1200
+
+                let $dur_bucket :=
+                      switch(true())
+                        case $dur_in_seconds le 60*29 return "0–29min"
+                        case $dur_in_seconds gt 60*29 and $dur_in_seconds ge 60*59 return "30–59min"
+                        case $dur_in_seconds gt 60*30 and $dur_in_seconds ge 60*119 return "1h–1h59"
+                        default return "2h+"
+
 		            let $order := replace($i, '\p{L}','')
 		            let $speech_event_type := substring-before(substring-after($i, $dom),$order)
 		            
 		            let $audioLocation := voice:path($i, "audio")
 		            
 		            
+
+                let $relation := $header//tei:relation
+
 		            (: CHECKME probably there are no tracks at all :)
 		            (:let $tracks := 
                         for $sf in $sfs
@@ -141,12 +161,17 @@ function voice:get-tree-as-xml($method as xs:string?) {
 							         </_>
 							}</tracks>-->
 							<words type="number">{$no_of_words}</words>
+              <wordsBucket type="string">{$no_of_words_bucket}</wordsBucket>
 							<duration type="number">{$dur_in_seconds}</duration>
+              <durationBucket type="string">{$dur_bucket}</durationBucket>
 							<speakers type="number">{$speakers_no}</speakers>
 							<speakersBucket>{$speakers_bucket}</speakersBucket>
               <speakers type="object">{$voice:speakers/*/*[refs/*/local-name() = data($i)]}</speakers>
+              <speakersL1 type="array">{distinct-values($voice:speakers/*/*[refs/*/local-name() = data($i)]/L1/_/substring-after(.,'-'))[. != '']!<_>{.}</_>}</speakersL1>
 							<interactants type="number">{$interactants_no}</interactants>
 							<interactantsBucket>{$interactants_bucket}</interactantsBucket>
+              <relationPower type="string">{$relation[@type="power"]/data(@name)}</relationPower>
+              <relationAcquaintedness type="string">{$relation[@type="acquaintedness"]/data(@name)}</relationAcquaintedness>
 						</_>
 				}</speechEvents>
         	</_>
