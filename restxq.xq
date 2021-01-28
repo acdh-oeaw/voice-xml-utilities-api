@@ -96,7 +96,7 @@ declare variable $voice:relationPower :=
     }</vocab>;
 
 declare variable $voice:relationAcquaintedness := 
-    <vocab name="voice:relationAcquaintedness">{
+    <vocab name="relationAcquaintedness">{
         for $a in distinct-values(collection($voice:collection)//tei:relation[@type="acquaintedness"]/data(@name))[. != ""]
         order by $a ascending
         return <entry>{$a}</entry>
