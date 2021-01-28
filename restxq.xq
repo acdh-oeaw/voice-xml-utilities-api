@@ -44,6 +44,60 @@ declare %private function voice:path($textid as xs:string, $view as xs:string){
         default return $b||"/"||$view
 };
 
+
+declare variable $voice:speakersNoVocab := 
+    <vocab name="speakersBucket">
+        <entry min="2" max="3">2–3</entry>
+        <entry min="4" max="6">4–6</entry>
+        <entry min="7" max="10">7–10</entry>
+        <entry min="11" max="14">11–14</entry>
+        <entry min="15">15 and more</entry>
+    </vocab>;
+
+
+declare variable $voice:interactantsVocab := 
+    <vocab name="interactantsBucket">
+        <entry max="3">2–3</entry>
+        <entry min="4" max="6">4–6</entry>
+        <entry min="7" max="10">7–10</entry>
+        <entry min="11" max="14">11–14</entry>
+        <entry min="15">15 and more</entry>
+    </vocab>;
+
+declare variable $voice:noOfWordsVocab := 
+   <vocab name="wordsBucket">
+        <entry max="2999">0–2999</entry>
+        <entry min="3000" max="5999">3000–5999</entry>
+        <entry min="6000" max="9999">6000–9999</entry>
+        <entry min="10000" max="14999">10000–14999</entry>
+        <entry min="15000">15000+</entry>
+    </vocab>;
+
+declare variable $voice:durationVocab := 
+   <vocab name="durationBucket">
+        <entry max="1799">0–29min</entry>
+        <entry min="1800" max="3599">30–59min</entry>
+        <entry min="3600" max="7199">1h–1h59min</entry>
+        <entry min="7200">2h+</entry>
+    </vocab>;
+
+declare function voice:bucketByValue($vocab as element(vocab), $value as xs:integer) as xs:string{
+    let $buckets := $vocab/entry
+    return
+        ($buckets[xs:integer(@min) le $value][xs:integer(@max) ge $value],
+        $buckets[xs:integer(@min) le $value][not(@max)],
+        $buckets[xs:integer(@max) ge $value][not(@min)])[1]
+};      
+
+declare function voice:vocab2array($vocab as element(vocab)){
+    element {$vocab/@name} {(
+        attribute {"type"} {"array"},
+        for $e in $vocab/entry 
+        return <_>{data($e)}</_>
+    )}
+};
+
+
 declare
   %rest:path("/VOICE_CLARIAH/corpus/tree")
   %rest:GET
@@ -64,6 +118,12 @@ function voice:get-tree-as-xml($method as xs:string?) {
     <distributor>{$voice:corpusHeader//tei:publicationStmt/tei:distributor/text()}</distributor>
     <source__description>{serialize($voice:corpusHeader//tei:sourceDesc/*, map {"method": "xml", "indent": "no"})}</source__description>
     <availability>{serialize($voice:corpusHeader//tei:publicationStmt/tei:availability/*, map {"method": "xml", "indent": "no"})}</availability>
+    <vocabs type="object">{(
+        voice:vocab2array($voice:speakersNoVocab),
+        voice:vocab2array($voice:interactantsVocab),
+        voice:vocab2array($voice:noOfWordsVocab),
+        voice:vocab2array($voice:durationVocab)
+    )}</vocabs>
     <refs type="object">
        <teiHeader>{voice:path("teiCorpus", "header")}</teiHeader>
     </refs>
@@ -81,51 +141,27 @@ function voice:get-tree-as-xml($method as xs:string?) {
 		            let $title := $header//tei:titleStmt/tei:title
 		           
 		            let $speakers_no := $header//tei:personGrp[@role = 'speakers']/xs:integer(@size)
-		            let $speakers_bucket := 
-		                  switch (true())
-		                      case $speakers_no le 3 return "2–3"
-		                      case $speakers_no ge 4 and $speakers_no le 6 return "4–6"
-		                      case $speakers_no ge 7 and $speakers_no le 10 return "7–10"
-		                      case $speakers_no ge 11 and $speakers_no le 14 return "11–14"
-		                      default return "15 and more"
-		                      
+		            let $speakers_bucket := voice:bucketByValue($voice:speakersNoVocab, $speakers_no)
+
 		            let $interactants_no := $header//tei:personGrp[@role = 'interactants']/xs:integer(@size)
 		            
-		            let $interactants_bucket :=
-		                  switch (true())
-		                      case $interactants_no le 3 return "2–3"
-		                      case $interactants_no ge 4 and $interactants_no le 6 return "4–6"
-		                      case $interactants_no ge 7 and $interactants_no le 10 return "7–10"
-		                      case $interactants_no ge 11 and $interactants_no le 14 return "11–14"
-		                      default return "15 and more"
-		            
+		            let $interactants_bucket := voice:bucketByValue($voice:interactantsVocab, $interactants_no)
+
 		            (: CHANGEME: This should be inside of extent :)
 		            let $no_of_words := $header//tei:note[starts-with(.,'Words')]/xs:integer(normalize-space(substring-after(.,'Words:')))
-                let $no_of_words_bucket :=
-                      switch(true())
-                          case xs:integer($no_of_words) le 2999 return "0–2999"
-                          case xs:integer($no_of_words) ge 3000 and xs:integer($no_of_words) le 5999 return "3000–5999"
-                          case xs:integer($no_of_words) ge 6000 and xs:integer($no_of_words) le 9999 return "6000–9999"
-                          case xs:integer($no_of_words) ge 10000 and xs:integer($no_of_words) le 14999 return "10000–14999"
-                          default return "15000+"
 
-
+                    let $no_of_words_bucket := voice:bucketByValue($voice:noOfWordsVocab, $no_of_words)
+                      
 		            let $dur := $header//tei:recording/xs:duration(@dur),
-		                $dur_in_seconds := seconds-from-duration($dur)+minutes-from-duration($dur)*60+hours-from-duration($dur)*1200
+		                $dur_in_seconds := xs:integer(seconds-from-duration($dur)+minutes-from-duration($dur)*60+hours-from-duration($dur)*1200)
 
-                let $dur_bucket :=
-                      switch(true())
-                        case $dur_in_seconds le 60*29 return "0–29min"
-                        case $dur_in_seconds gt 60*29 and $dur_in_seconds ge 60*59 return "30–59min"
-                        case $dur_in_seconds gt 60*30 and $dur_in_seconds ge 60*119 return "1h–1h59"
-                        default return "2h+"
+                    let $dur_bucket := voice:bucketByValue($voice:durationVocab, $dur_in_seconds)
+                      
 
 		            let $order := replace($i, '\p{L}','')
 		            let $speech_event_type := substring-before(substring-after($i, $dom),$order)
-		            
+
 		            let $audioLocation := voice:path($i, "audio")
-		            
-		            
 
                 let $relation := $header//tei:relation
 
@@ -161,17 +197,17 @@ function voice:get-tree-as-xml($method as xs:string?) {
 							         </_>
 							}</tracks>-->
 							<words type="number">{$no_of_words}</words>
-              <wordsBucket type="string">{$no_of_words_bucket}</wordsBucket>
+                            <wordsBucket type="string">{$no_of_words_bucket}</wordsBucket>
 							<duration type="number">{$dur_in_seconds}</duration>
-              <durationBucket type="string">{$dur_bucket}</durationBucket>
-							<speakers type="number">{$speakers_no}</speakers>
-							<speakersBucket>{$speakers_bucket}</speakersBucket>
-              <speakers type="object">{$voice:speakers/*/*[refs/*/local-name() = data($i)]}</speakers>
-              <speakersL1 type="array">{distinct-values($voice:speakers/*/*[refs/*/local-name() = data($i)]/L1/_/substring-after(.,'-'))[. != '']!<_>{.}</_>}</speakersL1>
-							<interactants type="number">{$interactants_no}</interactants>
+                            <durationBucket type="string">{$dur_bucket}</durationBucket>
+							<speakersNo type="number">{$speakers_no}</speakersNo>
+							<speakersBucket type="string">{$speakers_bucket}</speakersBucket>
+                            <speakers type="object">{$voice:speakers/*/*[refs/*/local-name() = data($i)]}</speakers>
+                            <speakersL1 type="array">{distinct-values($voice:speakers/*/*[refs/*/local-name() = data($i)]/L1/_/substring-after(.,'-'))[. != '']!<_>{.}</_>}</speakersL1>
+							<interactantsNo type="number">{$interactants_no}</interactantsNo>
 							<interactantsBucket>{$interactants_bucket}</interactantsBucket>
-              <relationPower type="string">{$relation[@type="power"]/data(@name)}</relationPower>
-              <relationAcquaintedness type="string">{$relation[@type="acquaintedness"]/data(@name)}</relationAcquaintedness>
+                            <relationPower type="string">{$relation[@type="power"]/data(@name)}</relationPower>
+                            <relationAcquaintedness type="string">{$relation[@type="acquaintedness"]/data(@name)}</relationAcquaintedness>
 						</_>
 				}</speechEvents>
         	</_>
