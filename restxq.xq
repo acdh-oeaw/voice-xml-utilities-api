@@ -203,7 +203,7 @@ function voice:get-tree-as-xml($method as xs:string?) {
 							<speakersNo type="number">{$speakers_no}</speakersNo>
 							<speakersBucket type="string">{$speakers_bucket}</speakersBucket>
                             <speakers type="object">{$voice:speakers/*/*[refs/*/local-name() = data($i)]}</speakers>
-                            <speakersL1 type="array">{distinct-values($voice:speakers/*/*[refs/*/local-name() = data($i)]/L1/_/substring-after(.,'-'))[. != '']!<_>{.}</_>}</speakersL1>
+                            <speakersL1 type="array">{distinct-values($voice:speakers/*/*[refs/*/local-name() = data($i)]/L1/_/substring-before(.,'-'))[. != '']!<_>{.}</_>}</speakersL1>
 							<interactantsNo type="number">{$interactants_no}</interactantsNo>
 							<interactantsBucket>{$interactants_bucket}</interactantsBucket>
                             <relationPower type="string">{$relation[@type="power"]/data(@name)}</relationPower>
