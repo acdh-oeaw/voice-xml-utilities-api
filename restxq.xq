@@ -103,7 +103,7 @@ declare variable $voice:relationAcquaintedness :=
     }</vocab>;
 
 declare variable $voice:domains := 
-    <vocab name="domains">{
+    <vocab name="domain">{
         for $a in distinct-values(collection($voice:collection)//tei:TEI/substring(@xml:id,1,2))
         order by $a ascending
         return <entry>{$a}</entry>
