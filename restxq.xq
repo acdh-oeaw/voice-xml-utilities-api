@@ -144,15 +144,7 @@ function voice:get-tree-as-xml($method as xs:string?) {
     let $ret := <json type="object">
 		<label>VOICE</label>
     <title>{$voice:corpusHeader//tei:titleStmt/tei:title/text()}</title>
-    <principal>{$voice:corpusHeader//tei:titleStmt/tei:principal/text()}</principal>
-    <researchers type="array">{$voice:corpusHeader//tei:editionStmt/tei:respStmt/tei:name!<_>{./text()}</_>}</researchers>
-    <funder>{normalize-space($voice:corpusHeader//tei:titleStmt/tei:funder/text())}</funder>
-    <edition>{string-join($voice:corpusHeader//tei:editionStmt/tei:edition//text(), ' ')}</edition>
-    <extent>{$voice:corpusHeader//tei:extent/text()}</extent>
-    <publisher type="array">{tokenize($voice:corpusHeader//tei:publicationStmt/tei:publisher/text(), ', ')!<_>{.}</_>}</publisher>
-    <distributor>{$voice:corpusHeader//tei:publicationStmt/tei:distributor/text()}</distributor>
-    <source__description>{serialize($voice:corpusHeader//tei:sourceDesc/*, map {"method": "xml", "indent": "no"})}</source__description>
-    <availability>{serialize($voice:corpusHeader//tei:publicationStmt/tei:availability/*, map {"method": "xml", "indent": "no"})}</availability>
+    <teiHeader>{serialize(xslt:transform(<cq:corpusHeader>{$voice:corpusHeader/tei:teiCorpus[1]/tei:teiHeader}</cq:corpusHeader>, 'styles/voice.xsl'), map {"method": "html", "indent": "no"})}</teiHeader>
     <filterEnums type="object">{(
         voice:vocab2array($voice:speakersNoVocab),
         voice:vocab2array($voice:interactantsVocab),
@@ -265,11 +257,11 @@ declare
   %rest:path("/VOICE_CLARIAH/corpus/header")
   %rest:GET
   %rest:produces("application/xml")
-  %rest:produces("application/json")
-  %rest:query-param("method", "{$method}", "xml")
+  %rest:produces("text/html")
+  %rest:query-param("method", "{$method}", "html")
 function voice:getHeader($method as xs:string?) {
     let $ret := switch($method)
-      case 'json' return json:serialize($voice:corpusHeader)
+      case 'html' return xslt:transform(<cq:corpusHeader>{$voice:corpusHeader/tei:teiCorpus[1]/tei:teiHeader}</cq:corpusHeader>, 'styles/voice.xsl')
       default return $voice:corpusHeader   
    return (<rest:response> 
     <output:serialization-parameters>
