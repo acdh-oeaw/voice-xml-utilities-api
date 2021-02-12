@@ -141,7 +141,7 @@ declare
   %rest:produces("text/html")
   %rest:query-param("method", "{$method}", "json")
 function voice:get-tree-as-xml($method as xs:string?) {
-    let $ret := <json type="object">
+    let $ret := (# db:copynode false #) {<json type="object">
 		<label>VOICE</label>
     <title>{$voice:corpusHeader//tei:titleStmt/tei:title/text()}</title>
     <teiHeader>{serialize(xslt:transform(<cq:corpusHeader xml:space="preserve">{$voice:corpusHeader/tei:teiCorpus[1]/tei:teiHeader}</cq:corpusHeader>, 'styles/voice.xsl'), map {"method": "xhtml", "indent": "no"})}</teiHeader>
@@ -159,6 +159,7 @@ function voice:get-tree-as-xml($method as xs:string?) {
     <refs type="object">
        <teiHeader>{voice:path("teiCorpus", "header")}</teiHeader>
     </refs>
+    <speakers type="object">{$voice:speakers/*/*}</speakers>
 		<domains type="array">{
 			for $t in collection($voice:collection)//tei:TEI
 	        let $id := $t/@xml:id
@@ -234,7 +235,10 @@ function voice:get-tree-as-xml($method as xs:string?) {
                             <durationBucket type="string">{$dur_bucket}</durationBucket>
 							<speakersNo type="number">{$speakers_no}</speakersNo>
 							<speakersBucket type="string">{$speakers_bucket}</speakersBucket>
-                            <speakers type="object">{$voice:speakers/*/*[refs/*/local-name() = data($i)]}</speakers>
+                            <speakersTags type="object">{for $p in $header//tei:listPerson//*[@xml:id]
+                            return element {substring-after(data($p/@xml:id), '_')} {attribute {'type'} {'object'}, $voice:speakers/*/*[local-name() = substring(data($p/@sameAs), 2)]/(* except refs), <ref>{substring(data($p/@sameAs), 2)}</ref>}
+                              (: $voice:speakers/*/*[refs/*/local-name() = data($i)] update delete node ./refs :)
+                            }</speakersTags>
                             <speakersL1 type="array">{distinct-values($voice:speakers/*/*[refs/*/local-name() = data($i)]/L1/_/substring-before(.,'-'))[. != '']!<_>{.}</_>}</speakersL1>
 							<interactantsNo type="number">{$interactants_no}</interactantsNo>
 							<interactantsBucket>{$interactants_bucket}</interactantsBucket>
@@ -244,7 +248,7 @@ function voice:get-tree-as-xml($method as xs:string?) {
 				}</speechEvents>
         	</_>
 	    }</domains>
-   </json>
+   </json>}
    return (<rest:response> 
     <output:serialization-parameters>
       <output:method value='{$method}'/>
