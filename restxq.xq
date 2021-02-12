@@ -144,7 +144,7 @@ function voice:get-tree-as-xml($method as xs:string?) {
     let $ret := <json type="object">
 		<label>VOICE</label>
     <title>{$voice:corpusHeader//tei:titleStmt/tei:title/text()}</title>
-    <teiHeader>{serialize(xslt:transform(<cq:corpusHeader>{$voice:corpusHeader/tei:teiCorpus[1]/tei:teiHeader}</cq:corpusHeader>, 'styles/voice.xsl'), map {"method": "html", "indent": "no"})}</teiHeader>
+    <teiHeader>{serialize(xslt:transform(<cq:corpusHeader xml:space="preserve">{$voice:corpusHeader/tei:teiCorpus[1]/tei:teiHeader}</cq:corpusHeader>, 'styles/voice.xsl'), map {"method": "xhtml", "indent": "no"})}</teiHeader>
     <filterEnums type="object">{(
         voice:vocab2array($voice:speakersNoVocab),
         voice:vocab2array($voice:interactantsVocab),
@@ -258,11 +258,16 @@ declare
   %rest:GET
   %rest:produces("application/xml")
   %rest:produces("text/html")
-  %rest:query-param("method", "{$method}", "html")
+  %rest:query-param("method", "{$method}", "xhtml")
 function voice:getHeader($method as xs:string?) {
-    let $ret := switch($method)
-      case 'html' return xslt:transform(<cq:corpusHeader>{$voice:corpusHeader/tei:teiCorpus[1]/tei:teiHeader}</cq:corpusHeader>, 'styles/voice.xsl')
-      default return $voice:corpusHeader   
+    let $input := <cq:corpusHeader xml:space="preserve">{$voice:corpusHeader/tei:teiCorpus[1]/tei:teiHeader}</cq:corpusHeader>,
+        $ret := switch($method)
+      case 'xhtml' return (        
+        <link rel="stylesheet" type="text/css" href="../voice_online.css"/>,
+        <link rel="stylesheet" type="text/css" href="../view_transcript.css"/>,
+        xslt:transform($input, 'styles/voice.xsl')
+      )
+      default return $input   
    return (<rest:response> 
     <output:serialization-parameters>
       <output:method value='{$method}'/>
@@ -278,8 +283,8 @@ declare
 function voice:get-doc($id, $method as xs:string?) {
   let $ret := switch ($method)
   case "html" return (
-    <link rel="stylesheet" type="text/css" href="voice_online.css"/>,
-    <link rel="stylesheet" type="text/css" href="view_transcript.css"/>,
+    <link rel="stylesheet" type="text/css" href="../voice_online.css"/>,
+    <link rel="stylesheet" type="text/css" href="../view_transcript.css"/>,
     parse-xml-fragment(xslt:transform-text(doc($voice:collection||"/"||$id||".xml"), doc(file:parent(static-base-uri())||"/styles/voice.xsl")))
   )
   default return doc($voice:collection||"/"||$id||".xml")
@@ -292,7 +297,7 @@ function voice:get-doc($id, $method as xs:string?) {
 };
 
 declare
-  %rest:path("/VOICE_CLARIAH/speechEvent/voice_online.css")
+  %rest:path("/VOICE_CLARIAH/voice_online.css")
   %rest:header-param("If-None-Match", "{$if-none-match}")
   %rest:GET
 function voice:get-voice-online-css($if-none-match as xs:string?) {
@@ -300,7 +305,7 @@ function voice:get-voice-online-css($if-none-match as xs:string?) {
 };
 
 declare
-  %rest:path("/VOICE_CLARIAH/speechEvent/view_transcript.css")
+  %rest:path("/VOICE_CLARIAH/view_transcript.css")
   %rest:header-param("If-None-Match", "{$if-none-match}")
   %rest:GET
 function voice:get-view-transcript-css($if-none-match as xs:string?) {

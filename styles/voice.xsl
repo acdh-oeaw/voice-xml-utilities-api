@@ -829,7 +829,10 @@
         </span>
 </xsl:template>
 
-<xsl:template match="tei:ref">
+  <xsl:template match="tei:ref">
+    <xsl:if test="not(ends-with(preceding-sibling::text()[1], '('))">
+      <xsl:text xml:space="preserve"> </xsl:text>
+    </xsl:if>
   <a>
             <xsl:attribute name="target">_blank</xsl:attribute>
     <xsl:if test="@target">
@@ -849,6 +852,9 @@
       </xsl:otherwise>
     </xsl:choose>
   </a>
+    <xsl:if test="not(matches(following-sibling::text()[1], '^[.),;:]'))">
+      <xsl:text xml:space="preserve"> </xsl:text>
+    </xsl:if>
 </xsl:template>
 
 
@@ -861,7 +867,7 @@
 
 
 <xsl:template match="/cq:corpusHeader/tei:teiHeader" name="corpusHeader">
-  <div class="header">
+  <div class="header" xml:space="preserve">
   <div class="title">
     <h1>
                     <xsl:value-of select="xs:string(.//tei:titleStmt/tei:title)"/>
@@ -1075,13 +1081,19 @@
   <xsl:apply-templates/>
 </xsl:template>
 
-<xsl:template match="tei:emph" mode="corpusHeader">
+  <xsl:template match="tei:emph" mode="corpusHeader">
+    <xsl:if test="not(matches(preceding-sibling::text()[1], '[:(]$'))">
+      <xsl:text xml:space="preserve"> </xsl:text>
+    </xsl:if>
   <em>
             <xsl:apply-templates/>
         </em>
 </xsl:template>
 
-<xsl:template match="tei:ref" mode="corpusHeader">
+  <xsl:template match="tei:ref" mode="corpusHeader">
+    <xsl:if test="not(ends-with(preceding-sibling::text()[1], '('))">
+      <xsl:text xml:space="preserve"> </xsl:text>
+    </xsl:if>
   <a>
             <xsl:attribute name="target">_blank</xsl:attribute>
     <xsl:if test="@target">
@@ -1101,9 +1113,15 @@
       </xsl:otherwise>
     </xsl:choose>
   </a>
+    <xsl:if test="not(matches(following-sibling::text()[1], '^[.),;:]'))">
+      <xsl:text xml:space="preserve"> </xsl:text>
+    </xsl:if>
 </xsl:template>
 
 <xsl:template match="tei:p" mode="corpusHeader">
+  <xsl:if test="ends-with(preceding-sibling::text()[1], ',')">
+    <xsl:text xml:space="preserve"> </xsl:text>
+  </xsl:if>
   <p>
             <xsl:apply-templates mode="corpusHeader"/>
         </p>
@@ -1634,10 +1652,16 @@
 <!--   <span class="laugh"></<xsl:value-of select="@feature"/>></span> -->
 <!-- </xsl:template> -->
 
-<xsl:template match="tei:emph">
+  <xsl:template match="tei:emph">
+    <xsl:if test="not(ends-with(preceding-sibling::text()[1], '('))">
+      <xsl:text xml:space="preserve"> </xsl:text>
+    </xsl:if>
   <span class="emph">
     <xsl:apply-templates/>
   </span>
+    <xsl:if test="exists(following-sibling::text()[1]) and not(matches(following-sibling::text()[1], '^[.),;:]'))">
+      <xsl:text xml:space="preserve"> </xsl:text>
+    </xsl:if>
 </xsl:template>
 
 <xsl:template match="/tei:TEI//text()">
