@@ -186,7 +186,7 @@ function voice:get-tree-as-xml($method as xs:string?) {
                     let $no_of_words_bucket := voice:bucketByValue($voice:noOfWordsVocab, $no_of_words)
                       
 		            let $dur := $header//tei:recording/xs:duration(@dur),
-		                $dur_in_seconds := xs:integer(seconds-from-duration($dur)+minutes-from-duration($dur)*60+hours-from-duration($dur)*1200)
+		                $dur_in_seconds := xs:integer(seconds-from-duration($dur)+minutes-from-duration($dur)*60+hours-from-duration($dur)*3600)
 
                     let $dur_bucket := voice:bucketByValue($voice:durationVocab, $dur_in_seconds)
                       
