@@ -1,5 +1,5 @@
 <commands>
-	<set option="CHOP">true</set>
+	<set option="CHOP">false</set>
     <!-- Especially the corpus header file uses xinclude to reference the other documents.
          We do not want BaseX to copy them into that file. -->
     <set option="XINCLUDE">false</set>

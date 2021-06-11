@@ -21,7 +21,7 @@ order by $c descending
 return map {substring($sa, 2):
 map{"age": $i[1]/tei:age/text(),
     "sex": $i[1]/tei:sex/text(),
-    "occupation": $i[1]/tei:occupation/text(),
+    "occupation": replace($i[1]/tei:occupation/text(), '\s+$', '')[. != ''],
     "L1": array {$i[1]/tei:langKnowledge/*[@level="L1"]/@tag/data()},
     "refs" : map:merge(
       for $r in $i/@xml:id
