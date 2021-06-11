@@ -1,0 +1,6 @@
+<commands>
+  <set option="EXPORTER">encoding=US-ASCII,indent=no,omit-xml-declaration=no</set>
+  <open name="VOICEmerged"/>
+  <export path="../voice_data/101_derived/voicexml/XTX_TOKXML1/"/>
+  <close/>
+</commands>
