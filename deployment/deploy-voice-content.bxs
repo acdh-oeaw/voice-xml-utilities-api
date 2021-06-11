@@ -1,5 +1,8 @@
 <commands>
-	<set option="CHOP">false</set>
+	<set option="CHOP">true</set>
+    <!-- Especially the corpus header file uses xinclude to reference the other documents.
+         We do not want BaseX to copy them into that file. -->
+    <set option="XINCLUDE">false</set>
     <!-- paths relative to bin directory of unpacked ZIP -->
     <create-db name="VOICEheader">../voice_data/001_src/VOICE2.0XML_EDITED/XML/_corpus-header.xml_</create-db>
     <create-db name="VOICEmerged">../voice_data/101_derived/voicexml/XTX_TOKXML1</create-db>

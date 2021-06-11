@@ -164,7 +164,8 @@ function voice:get-tree-as-xml($method as xs:string?) {
 			for $t in collection($voice:collection)//tei:TEI
 	        let $id := $t/@xml:id
 	        let $dom := substring($id, 1, 2)
-       		group by $dom 
+       		group by $dom
+           order by $dom ascending
         	return 
         	<_ type="object">
 		    	<label>{$dom}</label>
@@ -239,7 +240,7 @@ function voice:get-tree-as-xml($method as xs:string?) {
                             return element {substring-after(data($p/@xml:id), '_')} {attribute {'type'} {'object'}, $voice:speakers/*/*[local-name() = substring(data($p/@sameAs), 2)]/(* except refs), <ref>{substring(data($p/@sameAs), 2)}</ref>}
                               (: $voice:speakers/*/*[refs/*/local-name() = data($i)] update delete node ./refs :)
                             }</speakersTags>
-                            <speakersL1 type="array">{distinct-values($voice:speakers/*/*[refs/*/local-name() = data($i)]/L1/_/substring-before(.,'-'))[. != '']!<_>{.}</_>}</speakersL1>
+                            <speakersL1 type="array">{distinct-values($voice:speakers/*/*[refs/*/local-name() = data($i)]/L1/_/replace(.,'^([^-]+)-.*$', '$1'))[. != '']!<_>{.}</_>}</speakersL1>
 							<interactantsNo type="number">{$interactants_no}</interactantsNo>
 							<interactantsBucket>{$interactants_bucket}</interactantsBucket>
                             <relationPower type="string">{$relation[@type="power"]/data(@name)}</relationPower>
