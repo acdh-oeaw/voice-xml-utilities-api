@@ -880,9 +880,11 @@
     <xsl:if test=".//tei:principal">
       <h3>Project Director</h3>
       <ul>
+        <xsl:for-each select=".//tei:principal">
                         <li>
-                            <xsl:value-of select="xs:string(.//tei:principal)"/>
+                            <xsl:value-of select="xs:string(.)"/>
                         </li>
+        </xsl:for-each>
       </ul>
     </xsl:if>
     <xsl:if test=".//tei:titleStmt/tei:respStmt">
