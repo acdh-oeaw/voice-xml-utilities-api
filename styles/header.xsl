@@ -654,7 +654,7 @@
                 </h1>
                 <xsl:if test=".//tei:editionStmt/tei:edition">
                     <h2>
-                        <xsl:value-of select="xs:string(.//tei:editionStmt/tei:edition)"/>
+                        <!-- xsl:value-of select="replace(xs:string(.//tei:editionStmt/tei:edition), 'XML', 'Online')"/ -->
                     </h2>
                 </xsl:if>
                 <xsl:if test=".//tei:principal">
