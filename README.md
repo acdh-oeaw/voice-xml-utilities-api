@@ -2,6 +2,9 @@ VOICE CLARIAH API
 ==============
 
 An API that generates data in JSON format from the [VOICE CLARIAH data repository](https://gitlab.com/acdh-oeaw/voice/voice_data)
+This is mostly used to recalculate XML tag counts and to generate th data stored in corpustree.json
+of the VOICE Frontend repository.
+Fetch corpustree.json from a running instance at http://localhost:8984//VOICE_CLARIAH/corpus/tree
 
 Set up a local instance
 -----------------------
