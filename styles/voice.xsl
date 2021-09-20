@@ -1041,7 +1041,7 @@
 </xsl:template>
 
 <xsl:template match="tei:bibl" mode="corpusHeader">
-  <xsl:apply-templates/>
+<!--  <xsl:apply-templates/>-->
 </xsl:template>
 
 <xsl:template match="tei:category" mode="corpusHeader">
@@ -1125,8 +1125,13 @@
     <xsl:text xml:space="preserve"> </xsl:text>
   </xsl:if>
   <p>
-            <xsl:apply-templates mode="corpusHeader"/>
+            <xsl:apply-templates mode="corpusHeader" select="(*|text())[not(contains(., 'citation'))]"/>
         </p>
+</xsl:template>
+  
+  <xsl:template match="text()[contains(., 'README')]" mode="corpusHeader">
+  For further enquiries please contact the
+  VOICE Project at         
 </xsl:template>
 
 <xsl:template match="tei:p" mode="corpusHeaderPersonDesc">
