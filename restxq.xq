@@ -10,7 +10,7 @@ declare namespace cq = "http://www.univie.ac.at/voice/corpusquery";
 declare variable $voice:log := true();
 declare variable $voice:collection := 'VOICEmerged';
 declare variable $voice:apiBasePath := "/VOICE_CLARIAH";
-declare variable $voice:corpusHeader as document-node() := db:open('VOICEheader', 'corpusHeader.xml');
+declare variable $voice:corpusHeader as document-node() := db:open('VOICEheader', 'corpus-header_voice3-0.xml');
 declare variable $voice:audioDesc as document-node() := fn:parse-xml(file:read-text(file:base-dir()||'/audio/voiceAudioDesc.xml'));
 declare variable $voice:audioBasePath := "https://voice.acdh.oeaw.ac.at/sound";
 declare variable $voice:noskeRunCgi := "https://voice-noske.acdh-dev.oeaw.ac.at/bonito/run.cgi";
@@ -111,7 +111,7 @@ declare variable $voice:domains :=
 
 declare variable $voice:spets := 
     <vocab name="spet">{
-        for $a in distinct-values(collection($voice:collection)//tei:TEI/replace(substring(@xml:id,3),'\d+',''))
+        for $a in distinct-values(collection($voice:collection)//tei:TEI/substring(@xml:id,3,3))
         order by $a ascending
         return <entry>{$a}</entry>
     }</vocab>;
@@ -192,10 +192,10 @@ function voice:get-tree-as-xml($method as xs:string?) {
                     let $dur_bucket := voice:bucketByValue($voice:durationVocab, $dur_in_seconds)
                       
 
-		            let $order := replace($i, '\p{L}','')
+		            let $order := replace($i, '[.\p{L}]','')
 		            let $speech_event_type := substring-before(substring-after($i, $dom),$order)
 
-		            let $audioLocation := voice:path($i, "audio")
+		            let $audioLocation := voice:path(replace($i, '.xml', '', 'q'), "audio")
 
                 let $relation := $header//tei:relation
 
@@ -240,7 +240,7 @@ function voice:get-tree-as-xml($method as xs:string?) {
                             return element {substring-after(data($p/@xml:id), '_')} {attribute {'type'} {'object'}, $voice:speakers/*/*[local-name() = substring(data($p/@sameAs), 2)]/(* except refs), <ref>{substring(data($p/@sameAs), 2)}</ref>}
                               (: $voice:speakers/*/*[refs/*/local-name() = data($i)] update delete node ./refs :)
                             }</speakersTags>
-                            <speakersL1 type="array">{distinct-values($voice:speakers/*/*[refs/*/local-name() = data($i)]/L1/_/replace(.,'^([^-]+)-.*$', '$1'))[. != '']!<_>{.}</_>}</speakersL1>
+                            <speakersL1 type="array">{distinct-values($voice:speakers/*/*[refs/*/local-name() = replace($i, '.xml', '', 'q')]/L1/_/replace(.,'^([^-]+)-.*$', '$1'))[. != '']!<_>{.}</_>}</speakersL1>
 							<interactantsNo type="number">{$interactants_no}</interactantsNo>
 							<interactantsBucket>{$interactants_bucket}</interactantsBucket>
                             <relationPower type="string">{$relation[@type="power"]/data(@name)}</relationPower>
@@ -292,7 +292,7 @@ function voice:get-doc($id, $method as xs:string?) {
     <link rel="stylesheet" type="text/css" href="../view_transcript.css"/>,
     parse-xml-fragment(xslt:transform-text(doc($voice:collection||"/"||$id||".xml"), doc(file:parent(static-base-uri())||"/styles/voice.xsl")))
   )
-  default return doc($voice:collection||"/"||$id||".xml")
+  default return doc($voice:collection||"/"||$id)
    return (<rest:response> 
     <output:serialization-parameters>
       <output:method value='{$method}'/>
@@ -322,7 +322,7 @@ declare
   %rest:GET
   %output:method("xml")
 function voice:get-header($id) {
-    doc($voice:collection||"/"||$id||".xml")//tei:teiHeader
+    doc($voice:collection||"/"||$id)//tei:teiHeader
 };
 
 declare

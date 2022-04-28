@@ -2,11 +2,11 @@ VOICE XML UTILITIES API
 =======================
 
 An API that generates data in JSON format from the VOICE CLARIAH data repository.
-This is used in the [VOICE 3.0 Online frontend]()
+This is used in the [VOICE 3.0 Online frontend](https://github.com/acdh-oeaw/voice-fe/blob/main/public/corpustree.json)
 to supply static data about the corpus.
 This is mostly used to recalculate XML tag counts and to generate th data stored in corpustree.json
 of the VOICE Frontend repository.
-Fetch corpustree.json from a running instance at http://localhost:8984//VOICE_CLARIAH/corpus/tree
+Fetch corpustree.json from a running instance at http://localhost:8984/VOICE_CLARIAH/corpus/tree
 
 Set up a local instance
 -----------------------

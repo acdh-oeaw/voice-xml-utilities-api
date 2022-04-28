@@ -4,8 +4,8 @@
          We do not want BaseX to copy them into that file. -->
     <set option="XINCLUDE">false</set>
     <!-- paths relative to bin directory of unpacked ZIP -->
-    <create-db name="VOICEheader">../voice_data/101_derived/VOICE3.0XML/XML/corpusHeader.xml</create-db>
-    <create-db name="VOICEmerged">../voice_data/101_derived/VOICE3.0XML/XML</create-db>
+    <create-db name="VOICEheader">../voice-data/xml/corpus-header_voice3-0.xml</create-db>
+    <create-db name="VOICEmerged">../voice-data/xml</create-db>
     <open name="VOICEmerged"/>
-    <delete path="/corpusHeader.xml"/>
+    <delete path="/corpus-header_voice3-0.xml"/>
 </commands>
