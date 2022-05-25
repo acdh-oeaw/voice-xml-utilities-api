@@ -1,0 +1,9 @@
+{
+  "name": "voice-basex-api",
+  "version": "1.0.0",
+  "description": "BaseX server part of VOICE",
+  "engines": {
+    "basex": "9.7.2",
+    "saxon": "11.3"
+  }
+}
