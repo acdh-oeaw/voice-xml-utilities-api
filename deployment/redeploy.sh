@@ -9,9 +9,11 @@ if [ -f redeploy.settings ]
 then . redeploy.settings
 fi
 
+if [ -d webapp/voice-basex-api ]
+then
 #------ Update XQuery code -----------
-echo Updating voice-clariah-api
-pushd webapp/voice-clariah-api
+echo Updating voice-basex-api
+pushd webapp/voice-basex-api
 git pull
 ret=$?
 if [ $ret != "0" ]; then exit $ret; fi
@@ -24,6 +26,7 @@ find ./ -type f -and \( -name '*.xq' -or -name '*.js' -or -name '*.html' \) -not
 fi
 git checkout master
 popd
+fi
 #-------------------------------------
 
 ./execute-basex-batch.sh deploy-voice-content
