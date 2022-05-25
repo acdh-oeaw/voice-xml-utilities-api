@@ -4,16 +4,17 @@
 # * pulls the current code of the web application from github.
 # * pulls the current content of the web application from github.
 
+reponame=voice-xml-utilities-api
 onlytags=false
 if [ -f redeploy.settings ]
 then . redeploy.settings
 fi
 
-if [ -d webapp/voice-basex-api ]
+if [ -d webapp/$reponame ]
 then
 #------ Update XQuery code -----------
-echo Updating voice-basex-api
-pushd webapp/voice-basex-api
+echo Updating $reponame
+pushd webapp/$reponame
 git pull
 ret=$?
 if [ $ret != "0" ]; then exit $ret; fi
