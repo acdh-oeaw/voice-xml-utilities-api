@@ -1,11 +1,16 @@
 #!/bin/bash
+git clone https://github.com/acdh-oeaw/openapi4restxq.git -b master_basex
+npm install -g yarn
+cd openapi4restxq
+rm content/openapi-tests*.xqm
+yarn install
+sed -i 's~https://petstore.swagger.io/v2/swagger.json~/VOICE_CLARIAH/openapi.json~' resources/swagger-ui-dist/index.html
+cd ..
 cp -Rv ./deployment/* ${1:-../../}
 if [ -f package.json ]
 then npm install
 fi
-cd ${1:-../..}/webapp
-git clone https://github.com/acdh-oeaw/openapi4restxq.git -b master_basex
-cd ../
+cd ${1:-../..}
 if [ -f redeploy.settings.dist ]
 then mv redeploy.settings.dist redeploy.settings
 fi

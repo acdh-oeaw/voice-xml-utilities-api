@@ -1,7 +1,7 @@
 module namespace voice = 'http://www.univie.ac.at/voice/ns/1.0';
 
 import module namespace admin = "http://basex.org/modules/admin"; (: for logging :)
-import module namespace openapi="https://lab.sub.uni-goettingen.de/restxqopenapi" at "../openapi4restxq/content/openapi.xqm";
+import module namespace openapi="https://lab.sub.uni-goettingen.de/restxqopenapi" at "openapi4restxq/content/openapi.xqm";
 
 declare namespace exist = "http://exist.sourceforge.net/NS/exist"; (: for compatibility with xsl :)
 declare namespace tei = 'http://www.tei-c.org/ns/1.0';
@@ -375,6 +375,16 @@ declare
     %output:media-type('application/json')
 function voice:getOpenapiJSON() as item()+ {
   openapi:json(file:base-dir())
+};
+
+declare
+   %rest:path('/')
+function voice:forward-to-swagger-ui() as item()+ {
+  <rest:response>
+    <http:response status="302">
+      <http:header name="Location" value="/openapi/"/>
+    </http:response>
+  </rest:response>
 };
 
 declare %private function voice:l($message as xs:string) as empty-sequence() {
